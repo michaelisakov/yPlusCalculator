@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+	<head>
+
+		<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+
+	<style type="text/css">
+		#inputs, #defaults { 
+			padding: 10px;
+		}	
+		#inputs .row { 
+			padding-bottom: 10px;
+		}
+		#inputs, h1, p { 
+			text-align: center;
+		}
+		#inputs .row .col-sm-6 p { 
+			text-align: left;
+			font-weight:bold;
+
+		}
+		#plot { 
+			height: 500px;
+		}
+	</style>
+	
+	</head>
+
+	<body>
+
+	<div class="container">
+		<div class="row">
+			<div class="col-sm-6">
+				<div id="inputs"> 
+					<h1> Inputs: </h1>
+					<div class="row">
+						<div class="col-sm-6">
+							<p>Free Stream Velocity (m/s)</p>
+						</div>
+						<div class="col-sm-6">
+							<input id="Uinf" type="text" name="Uinf" placeholder="Velocity (m/s)">
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-6">
+							<p>Density (kg/m3)</p>
+						</div>
+						<div class="col-sm-6">
+							<input id="rho" type="text" name="rho" placeholder="Density (kg/m3)">
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-6">
+							<p>Reference Length (m)</p>
+						</div>
+						<div class="col-sm-6">
+							<input id="L" type="text" name="L" placeholder="Reference Length (m)">
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-6">
+							<p>Viscosity (kg/m-s)</p>
+						</div>
+						<div class="col-sm-6">
+							<input id="mu" type="text" name="mu" placeholder="Viscosity (kg/m-s)">
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-6">
+							<p># Iterations</p>
+						</div>
+						<div class="col-sm-6">
+							<input id="n" type="text" name="n" placeholder="# Iterations">
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="defaults" class="col-sm-6">
+				<h1>Defaults:</h1>
+				<p>Free Stream Velocity: 12.7 m/s</p>
+				<p>Density: 1.2754 kg/m3</p>
+				<p>Reference Length: 0.435429 m</p>
+				<p>Viscosity: 1.983E-05 kg/ms</p>
+				<p># Iterations: 1000</p>	
+			</div>
+		</div>
+
+		<div class="row" id="plot">
+			<div>
+				<h1> Plot: </h1>
+				<div id="chart" width="500px" height="500px"></div>
+			</div>
+		</div>
+
+		<div id="singleCalc" class="row">
+			<div class="row">
+				<h1> Single Calculation: </h1>
+
+				<div class="col-sm-2">
+					<p>Y Plus Value: </p>
+				</div>
+				
+				<div class="col-sm-2">
+					<input id="yPlus" type="text" name="yPlus" placeholder="Y+ Value">
+				</div>
+
+				<div class="col-sm-8">
+					<div class="col-sm-6">
+						<p>Result: </p>
+					</div>
+					<div class="col-sm-6">
+						<p id="yPlusAnswer"></p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+	<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+	<script src="canvas.min.js"></script>
+	<!--<script src="http://canvasjs.com/assets/script/canvasjs.min.js"></script>-->
+	<script src="y-calc.js"></script>
+	<script>
+		var Uinf = 12.7;  	// m/s
+		var rho = 1.2754; 	// kg/m3
+		var L = 0.435429; 	// m
+		var mu = 1.983E-05;  // kg/ms
+		var n = 1000;	
+
+		var y = new yCalc(Uinf, rho, L, mu, n);
+		renderChart(y); 
+
+		$(document).ready(function() { 
+			$('#Uinf').on('keyup change', function() { 
+				Uinf = $('#Uinf').val();
+				var y = new yCalc(Uinf, rho, L, mu, n); 
+				renderChart(y); 
+			});
+			$('#rho').on('keyup change', function() { 
+				rho = $('#rho').val();
+				var y = new yCalc(Uinf, rho, L, mu, n); 
+				renderChart(y); 
+			});
+			$('#L').on('keyup change', function() { 
+				L = $('#L').val();
+				var y = new yCalc(Uinf, rho, L, mu, n); 
+				renderChart(y); 
+			});
+			$('#mu').on('keyup change', function() { 
+				mu = $('#mu').val();
+				var y = new yCalc(Uinf, rho, L, mu, n); 
+				console.log([Uinf, rho, L, mu, n]);
+				renderChart(y); 
+			});
+			$('#n').on('keyup change', function() { 
+				n = $('#n').val();
+				var y = new yCalc(Uinf, rho, L, mu, n); 
+				renderChart(y); 
+			});
+			$('#yPlus').on('keyup change', function() { 
+				var yPlus= $('#yPlus').val();
+				$('#yPlusAnswer').text(y.wallDistance(yPlus) + ' m'); 
+			});
+		});
+
+		function renderChart(y) { 
+			var resultsArray, dataSeries, data, dataPoints;		
+
+			resultsArray = y.wallDistanceData(); 
+			
+			dataSeries = { type: "line" };
+			data = [];
+			dataPoints = []; 
+			for(var i = 0; i < n-2; i++) {
+				dataPoints.push({
+					x: resultsArray[i][0],
+					y: resultsArray[i][1]
+				});
+			}
+
+			dataSeries.dataPoints = dataPoints;
+			data.push(dataSeries);
+			
+			var performanceChart = new CanvasJS.Chart("chart", 
+			{
+				zoomEnabled: true, 
+				panEnabled: true, 
+				title: { 
+					text: "Y+ vs Wall Spacing (m)"
+				}, 
+				legend: {
+					horizontalAlign: "right", 
+					verticalAlign: "center"
+				}, 
+				axisY: { 
+					includeZero: false,
+					text: "y+"
+				},
+				axisX: {
+					text: "Wall Spacing"
+				},
+				data: data
+			});
+
+			performanceChart.render();
+		}
+
+	</script>
+
+	</body>
+</html>
